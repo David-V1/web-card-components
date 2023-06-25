@@ -1,49 +1,28 @@
-// const grayScaleImg = "https://picsum.photos/200/300?grayscale";
 const imgEndpoint = "https://picsum.photos";
-const cardComponents = document.querySelectorAll("image-card");
-
-function getImageDimensions(arrayCards) {
-	const width = [];
-	const height = [];
-	arrayCards.forEach((card) => {
-		let w = card.getAttribute("width");
-		width.push(w);
-		let h = card.getAttribute("height");
-		height.push(h);
-	});
-	return { width, height };
-}
-
-async function getImages(cards) {
-	const results = getImageDimensions(cards);
-	try {
-		if (cards.length) {
-			for (let i = 0; i < cards.length; i++) {
-				const response = await fetch(
-					`${imgEndpoint}/${results.width[i]}/${results.height[i]}/?grayscale`
-				);
-				let img = document.createElement("img");
-				img.src = response.url;
-				document.body.appendChild(img);
-			}
-		}
-	} catch (error) {
-		console.log("error", error);
-	}
-	console.log(images);
-	return images;
-}
 
 // creating Web Component
+
 const template = document.createElement("template");
 template.innerHTML = `
     <style>
         .grid-item {
-            background-color: rgba(255, 255, 255, 0.25);
+            background-color: rgba(255, 255, 255, 0.20);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             border: 1px solid #ffffff8d;
             padding: 20px;
             font-size: clamp(16px, 1.5vw, 28px);
             text-align: center;
+        }
+        h2 {
+            font-size: clamp(1.5rem, 3vw, 3rem);
+            font-family: "Racing Sans One", cursive;
+            letter-spacing: 5px;
+            text-align: center;
+        }
+        p {
+            font-size: clamp(1rem, 2vw, 1.5rem);
+            font-family: 'Ysabeau SC', sans-serif;
         }
     </style>
     <div class="grid-item">
@@ -58,6 +37,20 @@ class ImageCard extends HTMLElement {
 		super();
 		this.attachShadow({ mode: "open" });
 		this.shadowRoot.appendChild(template.content.cloneNode(true));
+		// edge case: if no width or height is provided, use a default image
+		if (!this.getAttribute("width") || !this.getAttribute("height")) {
+			fetch(`${imgEndpoint}/200/?grayscale`)
+				.then((response) => {
+					if (response.ok) {
+						this.shadowRoot.querySelector("img").src = response.url;
+						return response.blob();
+					}
+					throw new Error("Image request failed");
+				})
+				.catch((error) => {
+					console.log("Error:", error);
+				});
+		}
 
 		const width = this.getAttribute("width");
 		const height = this.getAttribute("height");
@@ -82,3 +75,20 @@ class ImageCard extends HTMLElement {
 }
 
 window.customElements.define("image-card", ImageCard);
+
+// keeping track of the DOM visibility
+const observer = new IntersectionObserver((entries) => {
+	entries.forEach((entry) => {
+		if (entry.isIntersecting) {
+			entry.target.classList.add("show");
+		} else {
+			entry.target.classList.remove("show");
+		}
+	});
+});
+
+const hiddenElements = document.querySelectorAll(".hidden");
+hiddenElements.forEach((element) => {
+	console.log(element);
+	observer.observe(element);
+});
