@@ -92,3 +92,20 @@ hiddenElements.forEach((element) => {
 	console.log(element);
 	observer.observe(element);
 });
+
+// text scroll event
+const heroText = document.querySelector(".hero-text");
+const heroTextHeight = heroText.offsetHeight;
+const heroTextScroll = heroTextHeight / 2;
+
+window.addEventListener("scroll", function () {
+	var centeredText = document.querySelector(".hero-text");
+	var scrollTop = window.scrollY;
+	var maxScroll = 350;
+
+	var translateY = Math.min(scrollTop, maxScroll);
+	console.log("translateY", translateY);
+
+	centeredText.style.transform =
+		"translate(-50%, calc(-50% + " + translateY + "px))";
+});
